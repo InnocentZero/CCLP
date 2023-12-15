@@ -1,4 +1,7 @@
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #ifndef CCLP
 #define CCLP
 
@@ -19,11 +22,19 @@ struct opttable {
     int size;
 };
 
-inline struct param init_param(char sparam, char *lparam);
+static inline struct param init_param(char sparam, char *lparam) {
+    struct param c = {.sparam = sparam, .lparam = lparam, .deps = NULL};
+    return c;
+};
 
 void init_param_deps(struct param *opt, int ndeps, struct param *deps);
 
-inline void assertparams(const char *opt);
+static inline void assertparams(const char *opt) {
+    if (opt[0] != '-' || opt[1] == '\0') {
+        fprintf(stderr, "Invalid option: %s", opt);
+        exit(EXIT_FAILURE);
+    }
+};
 
 void init_opt_table(struct opttable *tbl, int params, struct param *arr);
 

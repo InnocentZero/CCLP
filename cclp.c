@@ -4,18 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-inline void assertparams(const char *opt) {
-    if (opt[0] != '-' || opt[1] == '\0') {
-        fprintf(stderr, "Invalid option: %s", opt);
-        exit(EXIT_FAILURE);
-    }
-}
-
-inline struct param init_param(char sparam, char *lparam) {
-    struct param c = {.sparam = sparam, .lparam = lparam, .deps = NULL};
-    return c;
-}
-
 // pointers to the dependencies as the rest of the arguments
 void init_param_deps(struct param *opt, int ndeps, struct param *deps) {
     struct deplist **iter = &(opt->deps);
