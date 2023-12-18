@@ -8,12 +8,7 @@
 struct param {
     char sparam;
     char *lparam;
-    struct deplist *deps;
-};
-
-struct deplist {
-    struct param *dep;
-    struct deplist *next;
+    char *desc;
 };
 
 struct opttable {
@@ -22,19 +17,22 @@ struct opttable {
     int size;
 };
 
-static inline struct param init_param(char sparam, char *lparam) {
-    struct param c = {.sparam = sparam, .lparam = lparam, .deps = NULL};
+static inline struct param init_param(char sparam, char *lparam, char *desc) {
+    struct param c = {.sparam = sparam, .lparam = lparam, .desc = desc};
     return c;
 };
 
-void init_param_deps(struct param *opt, int ndeps, struct param *deps);
-
 static inline void assertparams(const char *opt) {
     if (opt[0] != '-' || opt[1] == '\0') {
-        fprintf(stderr, "Invalid option: %s", opt);
+        fprintf(stderr,
+                "Invalid option format: %s\nOptions should begin with a single "
+                "dash (-o) \nor double dash (--option)\n",
+                opt);
         exit(EXIT_FAILURE);
     }
 };
+
+void disp_help(const struct opttable *tbl, const char *name);
 
 void init_opt_table(struct opttable *tbl, int params, struct param *arr);
 
@@ -43,6 +41,7 @@ bool *sentry(struct opttable *tbl, char param);
 bool *lentry(struct opttable *tbl, const char *param);
 
 struct opttable *check_args(int ioargc, char *ioargv[], int params,
-                            struct param *arr, ...);
+                            struct param *arr);
 
+void free_opt_table(struct opttable *tbl);
 #endif // !CCLP

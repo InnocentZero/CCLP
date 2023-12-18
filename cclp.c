@@ -1,18 +1,15 @@
 #include "cclp.h"
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-// pointers to the dependencies as the rest of the arguments
-void init_param_deps(struct param *opt, int ndeps, struct param *deps) {
-    struct deplist **iter = &(opt->deps);
-    for (int i = 0; i < ndeps; i++) {
-        *iter = malloc(sizeof(**iter));
-        (*iter)->dep = (deps + i);
-        *iter = (*iter)->next;
+void disp_help(const struct opttable *tbl, const char *name) {
+    printf("Usage: %s <arguments>", name);
+    for (int i = 0; i < tbl->size; i++) {
+        printf("-%c, --%s: %s\n", (tbl->table + i)->sparam,
+               (tbl->table + i)->lparam, (tbl->table + i)->desc);
     }
-    *iter = NULL;
+    fputc('\n', stdout);
 }
 
 void init_opt_table(struct opttable *tbl, int params, struct param *arr) {
@@ -49,32 +46,38 @@ bool *lentry(struct opttable *tbl, const char *param) {
 // supply the sizes of arrays and arrays of dependent options as variadic
 // parameters, NULL if none
 struct opttable *check_args(int ioargc, char *ioargv[], int params,
-                            struct param *arr, ...) {
+                            struct param *arr) {
     struct opttable *tbl = (struct opttable *)malloc(sizeof(*tbl));
     init_opt_table(tbl, params, arr);
-    va_list vaiter;
-    va_start(vaiter, arr);
-    for (int i = 0; i < params; i++) {
-        init_param_deps(tbl->table + i, va_arg(vaiter, int),
-                        va_arg(vaiter, struct param *));
-    }
-    va_end(vaiter);
     for (int i = 1; i < ioargc; i++) {
         assertparams(ioargv[i]);
-        if (strncmp(ioargv[i], "--", 3) == 0) {
+        if (strncmp(ioargv[i], "--help", 7) == 0 ||
+            strncmp(ioargv[i], "-h", 2) == 0) {
+            disp_help(tbl, ioargv[0]);
+        } else if (strncmp(ioargv[i], "--", 3) == 0) {
             break;
         } else if (strncmp(ioargv[i], "--", 2) == 0) {
             char *ptr = ioargv[i];
-            ptr++, ptr++;
-            *(lentry(tbl, ptr)) = true;
+            ptr += 2;
+            bool negate = (strncmp(ptr, "no-", 3) == 0);
+            negate ? ptr += 3 : 0;
+            bool *pres = lentry(tbl, ptr);
+            pres ? *pres = !negate : 0;
         } else {
             char *ptr = ioargv[i];
             ptr++;
             while (*ptr != '\0') {
-                *(sentry(tbl, *ptr)) = true;
+                bool *pres = sentry(tbl, *ptr);
+                pres ? *pres = true : 0;
                 ptr++;
             }
         }
     }
     return tbl;
+}
+
+void free_opt_table(struct opttable *tbl) {
+    free(tbl->table);
+    free(tbl->present);
+    free(tbl);
 }
