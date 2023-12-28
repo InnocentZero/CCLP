@@ -7,8 +7,9 @@
 
 struct param {
     char sparam;
-    char *lparam;
-    char *desc;
+    const char *lparam;
+    char *val;
+    const char *desc;
 };
 
 struct opttable {
@@ -17,8 +18,10 @@ struct opttable {
     int size;
 };
 
-static inline struct param init_param(char sparam, char *lparam, char *desc) {
-    struct param c = {.sparam = sparam, .lparam = lparam, .desc = desc};
+static inline struct param init_param(char sparam, const char *lparam,
+                                      const char *desc) {
+    struct param c = {
+        .sparam = sparam, .lparam = lparam, .val = NULL, .desc = desc};
     return c;
 };
 
@@ -32,16 +35,28 @@ static inline void assertparams(const char *opt) {
     }
 };
 
+static inline void bufchk(void *buf) {
+    if (buf == NULL) {
+        printf("malloc/calloc failed at line %d; function %s; file %s\n",
+               __LINE__, __FUNCTION__, __FILE__);
+    }
+    exit(EXIT_FAILURE);
+}
+
 void disp_help(const struct opttable *tbl, const char *name);
 
 void init_opt_table(struct opttable *tbl, int params, struct param *arr);
 
-bool *sentry(struct opttable *tbl, char param);
+const bool *sentry(const struct opttable *tbl, char param);
 
-bool *lentry(struct opttable *tbl, const char *param);
+const bool *lentry(const struct opttable *tbl, const char *param);
 
 struct opttable *check_args(int ioargc, char *ioargv[], int params,
                             struct param *arr);
 
-void free_opt_table(struct opttable *tbl);
+static inline void free_opt_table(struct opttable *tbl) {
+    free(tbl->table);
+    free(tbl->present);
+    free(tbl);
+};
 #endif // !CCLP

@@ -1,4 +1,5 @@
 #include "cclp.h"
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,19 +10,21 @@ void disp_help(const struct opttable *tbl, const char *name) {
         printf("-%c, --%s: %s\n", (tbl->table + i)->sparam,
                (tbl->table + i)->lparam, (tbl->table + i)->desc);
     }
-    fputc('\n', stdout);
+    puts("");
 }
 
 void init_opt_table(struct opttable *tbl, int params, struct param *arr) {
     tbl->table = (struct param *)malloc(params * sizeof(*(tbl->table)));
+    bufchk(tbl->table);
     tbl->present = (bool *)calloc(params, sizeof(*(tbl->present)));
+    bufchk(tbl->present);
     tbl->size = params;
     for (int i = 0; i < params; i++) {
         tbl->table[i] = arr[i];
     }
 }
 
-bool *sentry(struct opttable *tbl, char param) {
+const bool *sentry(const struct opttable *tbl, char param) {
     bool *ptr = NULL;
     for (int i = 0; i < tbl->size; i++) {
         if (tbl->table[i].sparam == param) {
@@ -32,7 +35,17 @@ bool *sentry(struct opttable *tbl, char param) {
     return ptr;
 }
 
-bool *lentry(struct opttable *tbl, const char *param) {
+bool *sentry__(struct opttable *tbl, char param) {
+    bool *ptr = NULL;
+    for (int i = 0; i < tbl->size; i++) {
+        if (tbl->table[i].sparam == param) {
+            ptr = tbl->present + i;
+            break;
+        }
+    }
+    return ptr;
+};
+const bool *lentry(const struct opttable *tbl, const char *param) {
     bool *ptr = NULL;
     for (int i = 0; i < tbl->size; i++) {
         if (strcmp(tbl->table[i].lparam, param) == 0) {
@@ -43,11 +56,48 @@ bool *lentry(struct opttable *tbl, const char *param) {
     return ptr;
 }
 
-// supply the sizes of arrays and arrays of dependent options as variadic
-// parameters, NULL if none
+char *lopt(const struct opttable *tbl, const char *param) {
+    char *val = NULL;
+    for (int i = 0; i < tbl->size; i++) {
+        if (strcmp(tbl->table[i].lparam, param) == 0) {
+            val = tbl->table[i].val + i;
+            break;
+        }
+    }
+    return val;
+}
+
+struct opts {
+    bool *entry;
+    struct param *param;
+};
+
+struct opts lentry__(struct opttable *tbl, char *param, const char *paramend) {
+    bool *boolptr;
+    struct param *paramptr;
+    int len = paramend - param + 1;
+    char *buf = (char *)malloc(len * sizeof(*buf));
+    bufchk(buf);
+    int i = 0;
+    for (i = 0; i < len - 1; i++) {
+        buf[i] = *param++;
+    }
+    buf[len - 1] = '\0';
+    i = 0;
+    while (i < tbl->size && strcmp(tbl->table[i].lparam, buf)) {
+        i++;
+    }
+    boolptr = i < tbl->size ? tbl->present + i : NULL;
+    paramptr = i < tbl->size ? tbl->table + i : NULL;
+    free(buf);
+    struct opts opt = {.entry = boolptr, .param = paramptr};
+    return opt;
+};
+
 struct opttable *check_args(int ioargc, char *ioargv[], int params,
                             struct param *arr) {
     struct opttable *tbl = (struct opttable *)malloc(sizeof(*tbl));
+    bufchk(tbl);
     init_opt_table(tbl, params, arr);
     for (int i = 1; i < ioargc; i++) {
         assertparams(ioargv[i]);
@@ -61,23 +111,24 @@ struct opttable *check_args(int ioargc, char *ioargv[], int params,
             ptr += 2;
             bool negate = (strncmp(ptr, "no-", 3) == 0);
             negate ? ptr += 3 : 0;
-            bool *pres = lentry(tbl, ptr);
-            pres ? *pres = !negate : 0;
+            char *ptr2 = ptr;
+            while (ptr2 != NULL && *ptr2 != '=' && *ptr2 != '\0') {
+                ptr2++;
+            }
+            struct opts pres = lentry__(tbl, ptr, ptr2);
+            if (pres.entry) {
+                *(pres.entry) = !negate;
+                pres.param->val = *(ptr2) == '=' ? ptr2 + 1 : NULL;
+            }
         } else {
             char *ptr = ioargv[i];
             ptr++;
             while (*ptr != '\0') {
-                bool *pres = sentry(tbl, *ptr);
+                bool *pres = sentry__(tbl, *ptr);
                 pres ? *pres = true : 0;
                 ptr++;
             }
         }
     }
     return tbl;
-}
-
-void free_opt_table(struct opttable *tbl) {
-    free(tbl->table);
-    free(tbl->present);
-    free(tbl);
 }
