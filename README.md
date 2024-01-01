@@ -1,9 +1,8 @@
 # CCLP
 
-A simple command line option manager and resolver for C programs.
-It has a built in handler for on-off/true-false kind of switches that your program can expect. It has a built in help handler.
+Library for superior string support and command line arguments.
 
 ## TODO
 
-- [ ] Add a tutorial.
+- [ ] Add socket abstractions.
 
