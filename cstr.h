@@ -20,6 +20,7 @@
 struct cstr {
 	size_t len;
 	char *buf;
+	size_t capacity;
 };
 
 typedef struct cstr cstr;
@@ -29,10 +30,14 @@ cstr *alloc_str(size_t bufsize, const char *buf);
 cstr ref_str(size_t bufsize, char *buf);
 cstr readline(FILE *fs);
 cstr readdelim(FILE *fs, int delim);
+void append_raw_str(cstr *curr, const char *buf, const size_t len);
+void append_str(cstr *curr, const cstr app);
+void append_char(cstr *curr, const char c);
 static inline void freestr(cstr *str)
 {
 	free(str->buf);
 	str->buf = NULL;
 	str->len = 0;
+	str->capacity = 0;
 };
 #endif // !CSTR
