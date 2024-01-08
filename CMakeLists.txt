@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.27)
 
-project(tic_tac_toe
+project(CCLP
     VERSION 0.1
     DESCRIPTION "A modern C library to prvide useful and low overhead abstractions"
     LANGUAGES C
@@ -20,4 +20,4 @@ file(GLOB_RECURSE HEADERS ${PROJECT_SOURCE_DIR}/inc/*.h)
 include_directories(${PROJECT_SOURCE_DIR}/inc/)
 
 # building library
-add_library(${PROJECT_NAME} STATIC ${SOURCES} ${HEADERS})
+add_library(${PROJECT_NAME} OBJECT ${SOURCES} ${HEADERS})
