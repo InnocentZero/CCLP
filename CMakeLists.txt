@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.27)
 
 project(CCLP
     VERSION 0.1
-    DESCRIPTION "A modern C library to prvide useful and low overhead abstractions"
+    DESCRIPTION "A modern C library to provide useful and low overhead abstractions"
     LANGUAGES C
 )
 # CMAKE Standard
