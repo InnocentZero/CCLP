@@ -26,7 +26,8 @@ static void FN_CREATE(for_each_in_deque,
 	}
 };
 
-static void double_capacity(struct FN_CREATE(deque, TYPE) * buf)
+static void FN_CREATE(double_capacity_deque,
+		      TYPE)(struct FN_CREATE(deque, TYPE) * buf)
 {
 	TYPE *tmp = (TYPE *)realloc(buf->buffer, 2 * buf->capacity + 1);
 	BUFCHK(tmp);
@@ -57,7 +58,7 @@ static void FN_CREATE(deque_push_back,
 		      TYPE)(struct FN_CREATE(deque, TYPE) * buf, TYPE value)
 {
 	if (buf->size == buf->capacity) {
-		double_capacity(buf);
+		FN_CREATE(double_capacity_deque, TYPE)(buf);
 	}
 	buf->buffer[buf->back] = value;
 	buf->back = (buf->back + 1) % buf->capacity;
@@ -68,7 +69,7 @@ static void FN_CREATE(deque_push_front,
 		      TYPE)(struct FN_CREATE(deque, TYPE) * buf, TYPE value)
 {
 	if (buf->size == buf->capacity) {
-		double_capacity(buf);
+		FN_CREATE(double_capacity_deque, TYPE)(buf);
 	}
 	buf->buffer[buf->front] = value;
 	buf->front = buf->front == 0 ? buf->capacity - 1 : buf->front - 1;

@@ -13,7 +13,8 @@ struct FN_CREATE(vec, TYPE) {
 	TYPE *buffer;
 };
 
-static void double_capacity(struct FN_CREATE(vec, TYPE) * buf)
+static void FN_CREATE(double_capacity_vector,
+		      TYPE)(struct FN_CREATE(vec, TYPE) * buf)
 {
 	TYPE *tmp = (TYPE *)realloc(buf->buffer, 2 * buf->capacity);
 	BUFCHK(tmp);
@@ -38,7 +39,7 @@ static void FN_CREATE(vec_push_back, TYPE)(struct FN_CREATE(vec, TYPE) * buf,
 					   TYPE value)
 {
 	if (buf->size == buf->capacity) {
-		double_capacity(buf);
+		FN_CREATE(double_capacity_vector, TYPE)(buf);
 	}
 	buf->buffer[buf->size] = value;
 	buf->size++;
